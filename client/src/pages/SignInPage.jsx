@@ -7,7 +7,7 @@ export default function SignInPage() {
       <Card className="p-8">
         <h1 className="text-lg font-semibold text-ink-950">Sign in</h1>
         <p className="mt-1 text-sm text-ink-500">
-          Account access is coming in a future release — this is a preview of the sign-in flow.
+          Account access is coming in a future release— this is a preview of the sign-in flow.
         </p>
 
         <form className="mt-6 flex flex-col gap-4">
