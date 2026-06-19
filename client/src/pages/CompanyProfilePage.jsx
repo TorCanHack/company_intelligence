@@ -18,6 +18,7 @@ export default function CompanyProfilePage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [status, setStatus] = useState(null);
   const [tab, setTab] = useState('overview');
 
   useEffect(() => {
@@ -26,13 +27,17 @@ export default function CompanyProfilePage() {
     const load = async () => {
       setLoading(true);
       setError(null);
+      setStatus(null);
       setTab('overview');
 
       try {
         const result = await getCompanyBySlug(slug);
         if (active) setData(result);
       } catch (err) {
-        if (active) setError(err.message);
+        if (active) {
+          setError(err.message);
+          setStatus(err.status ?? null);
+        }
       } finally {
         if (active) setLoading(false);
       }
@@ -54,6 +59,17 @@ export default function CompanyProfilePage() {
   }
 
   if (error || !data) {
+    if (status === 401) {
+      return (
+        <div className="flex flex-col gap-4">
+          <EmptyState title="Sign in to view this company" description="Your session has expired or you're not signed in." />
+          <Link to="/sign-in" className="text-sm font-medium text-accent-600 hover:underline">
+            Sign in
+          </Link>
+        </div>
+      );
+    }
+
     return (
       <div className="flex flex-col gap-4">
         <EmptyState title="Company not found" description={error || 'This company does not exist.'} />

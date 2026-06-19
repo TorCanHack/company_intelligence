@@ -1,13 +1,40 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 const PERKS = ['40M+ company profiles', 'Funding, signals & org charts', '14-day trial · no card'];
 
 export default function StartPage() {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const [mode, setMode] = useState(pathname === '/sign-in' ? 'signin' : 'signup');
   const isSignup = mode === 'signup';
+
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setSubmitting(true);
+    setError(null);
+
+    const { error: authError } = isSignup
+      ? await supabase.auth.signUp({ email, password, options: { data: { full_name: fullName } } })
+      : await supabase.auth.signInWithPassword({ email, password });
+
+    setSubmitting(false);
+
+    if (authError) {
+      setError(authError.message);
+      return;
+    }
+
+    navigate('/home');
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-sketch-bg px-6 py-12 font-script">
@@ -70,13 +97,14 @@ export default function StartPage() {
             {isSignup ? 'Get started — free for 14 days.' : 'Sign in to continue.'}
           </p>
 
-          <form className="flex flex-col gap-3.5">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
             {isSignup && (
               <label className="flex flex-col gap-1.5 text-xs text-sketch-label">
                 Full name
                 <input
                   type="text"
-                  disabled
+                  value={fullName}
+                  onChange={(event) => setFullName(event.target.value)}
                   placeholder="Jane Doe"
                   className="rounded-lg border-[1.5px] border-sketch-border px-3.5 py-2.5 text-sm text-sketch-text placeholder:text-sketch-label/70 disabled:bg-white"
                 />
@@ -87,7 +115,9 @@ export default function StartPage() {
               Work email
               <input
                 type="email"
-                disabled
+                required
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
                 placeholder="you@firm.com"
                 className="rounded-lg border-[1.5px] border-sketch-border px-3.5 py-2.5 text-sm text-sketch-text placeholder:text-sketch-label/70 disabled:bg-white"
               />
@@ -100,19 +130,25 @@ export default function StartPage() {
               </span>
               <input
                 type="password"
-                disabled
+                required
+                minLength={6}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
                 placeholder="••••••••"
                 className="rounded-lg border-[1.5px] border-sketch-border px-3.5 py-2.5 text-sm text-sketch-text placeholder:text-sketch-label/70 disabled:bg-white"
               />
             </label>
-          </form>
 
-          <Link
-            to="/home"
-            className="mt-3.5 block rounded-lg bg-sketch-accent py-3 text-center text-sm font-medium text-white"
-          >
-            {isSignup ? 'Get started' : 'Sign in'}
-          </Link>
+            {error && <p className="text-xs text-red-600">{error}</p>}
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="mt-1 block rounded-lg bg-sketch-accent py-3 text-center text-sm font-medium text-white disabled:opacity-60"
+            >
+              {submitting ? 'Please wait…' : isSignup ? 'Get started' : 'Sign in'}
+            </button>
+          </form>
 
           <div className="my-3.5 flex items-center gap-2.5">
             <span className="h-px flex-1 bg-sketch-border" />

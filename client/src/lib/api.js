@@ -1,11 +1,17 @@
+import { supabase } from './supabase';
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 const request = async (path) => {
-  const response = await fetch(`${API_BASE_URL}${path}`);
+  const { data: { session } } = await supabase.auth.getSession();
+
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    headers: session ? { Authorization: `Bearer ${session.access_token}` } : {},
+  });
   const body = await response.json();
 
   if (!response.ok) {
-    throw new Error(body.message || 'Request failed.');
+    throw Object.assign(new Error(body.message || 'Request failed.'), { status: response.status });
   }
 
   return body;

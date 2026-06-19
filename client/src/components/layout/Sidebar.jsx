@@ -1,4 +1,6 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../lib/useAuth';
+import { supabase } from '../../lib/supabase';
 
 const NAV_ITEMS = [
   { id: 'home', label: 'Home', to: '/home' },
@@ -14,6 +16,14 @@ const WATCHLIST_PREVIEW = [
 ];
 
 export default function Sidebar({ current = 'home' }) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate('/sign-in');
+  };
+
   return (
     <div className="flex h-full min-h-190 w-50 flex-none flex-col border-r border-dashed border-sketch-divider p-3.5">
       <div className="mb-6 flex items-center gap-2 px-1.5">
@@ -52,17 +62,32 @@ export default function Sidebar({ current = 'home' }) {
         ))}
       </div>
 
-      <Link
-        to="/sign-in"
-        className="mt-auto flex items-center gap-2 border-t border-dashed border-sketch-divider px-1.5 pt-2.5"
-      >
-        <span className="size-6.5 flex-none rounded-full bg-sketch-accent/25" />
-        <div className="min-w-0 flex-1">
-          <div className="text-xs text-sketch-text">Jane Doe</div>
-          <div className="text-[10px] text-sketch-label">Free trial · 12 days left</div>
-        </div>
-        <span className="text-sm text-sketch-label">›</span>
-      </Link>
+      {user ? (
+        <button
+          type="button"
+          onClick={handleSignOut}
+          className="mt-auto flex items-center gap-2 border-t border-dashed border-sketch-divider px-1.5 pt-2.5 text-left"
+        >
+          <span className="size-6.5 flex-none rounded-full bg-sketch-accent/25" />
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-xs text-sketch-text">{user.email}</div>
+            <div className="text-[10px] text-sketch-label">Sign out</div>
+          </div>
+          <span className="text-sm text-sketch-label">›</span>
+        </button>
+      ) : (
+        <Link
+          to="/sign-in"
+          className="mt-auto flex items-center gap-2 border-t border-dashed border-sketch-divider px-1.5 pt-2.5"
+        >
+          <span className="size-6.5 flex-none rounded-full bg-sketch-accent/25" />
+          <div className="min-w-0 flex-1">
+            <div className="text-xs text-sketch-text">Sign in</div>
+            <div className="text-[10px] text-sketch-label">Free trial · 14 days</div>
+          </div>
+          <span className="text-sm text-sketch-label">›</span>
+        </Link>
+      )}
     </div>
   );
 }

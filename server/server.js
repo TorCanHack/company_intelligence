@@ -1,6 +1,23 @@
 const express = require('express');
 const cors = require('cors');
+const { createClient } = require('@supabase/supabase-js');
 const pool = require('./db');
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY // service role — never expose this to the frontend
+);
+
+const requireAuth = async (req, res, next) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) return res.status(401).json({ message: 'Unauthorized.' });
+
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  if (error || !user) return res.status(401).json({ message: 'Invalid or expired session.' });
+
+  req.user = user;
+  next();
+};
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -123,7 +140,7 @@ app.get('/api/companies', async (req, res) => {
   }
 });
 
-app.get('/api/companies/:slug', async (req, res) => {
+app.get('/api/companies/:slug', requireAuth, async (req, res) => {
   try {
     const { rows: companyRows } = await pool.query(
       `select c.*, s.name as sector, s.slug as sector_slug
