@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
 
 const NAV_ITEMS = [
-  { id: 'home', label: 'Home', to: '/directory' },
-  { id: 'watch', label: 'Watchlist', to: '/directory' },
-  { id: 'signals', label: 'Signals', to: '/directory' },
+  { id: 'home', label: 'Home', to: '/home' },
+  { id: 'watch', label: 'Watchlist', to: '/watchlist' },
+  { id: 'signals', label: 'Signals', to: '/signals' },
 ];
 
 const WATCHLIST_PREVIEW = [

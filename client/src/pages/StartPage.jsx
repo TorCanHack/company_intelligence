@@ -1,33 +1,144 @@
-import { Link } from 'react-router-dom';
-import homeImage from '../assets/promisedland_hero.png';
+import { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Check } from 'lucide-react';
+
+const PERKS = ['40M+ company profiles', 'Funding, signals & org charts', '14-day trial · no card'];
 
 export default function StartPage() {
+  const { pathname } = useLocation();
+  const [mode, setMode] = useState(pathname === '/sign-in' ? 'signin' : 'signup');
+  const isSignup = mode === 'signup';
+
   return (
-    <div
-      className="relative flex min-h-112 items-center justify-center overflow-hidden rounded-3xl bg-cover bg-center px-6 py-20 text-center sm:min-h-136"
-      style={{ backgroundImage: `url(${homeImage})` }}
-    >
-      <div className="absolute inset-0 bg-ink-950/55" />
+    <div className="flex min-h-screen items-center justify-center bg-sketch-bg px-6 py-12 font-script">
+      <Link to="/" className="fixed left-6 top-5 text-sm text-sketch-muted hover:text-sketch-text">
+        ← Back to home
+      </Link>
 
-      <div className="relative mx-auto max-w-2xl">
-        <h1 className="text-4xl font-bold text-white sm:text-5xl">Welcome to Company Intelligence</h1>
-        <p className="mt-4 text-lg text-white/90">
-          Discover, analyze, and track private companies you didn&apos;t know exist.
-        </p>
+      <div className="flex w-full max-w-3xl overflow-hidden rounded-sm border border-sketch-border bg-white shadow-sm">
+        <div className="hidden w-[44%] flex-none flex-col bg-sketch-heading p-8 sm:flex">
+          <div className="mb-7 flex items-center gap-2">
+            <span className="size-3.5 rounded-full bg-sketch-accent" />
+            <span className="font-handwritten text-sm text-white">Company Intelligence</span>
+          </div>
 
-        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <div className="font-handwritten text-2xl leading-tight text-white">
+            Know any company
+            <br />
+            before the meeting
+          </div>
+          <p className="mt-3 max-w-[85%] text-sm text-white/60">
+            Search 40M+ companies and get the full picture before you walk in.
+          </p>
+
+          <div className="mt-auto flex flex-col gap-2.5 pt-7">
+            {PERKS.map((perk) => (
+              <div key={perk} className="flex items-center gap-2">
+                <Check className="size-3.5 flex-none text-sketch-accent" />
+                <span className="text-sm text-white/70">{perk}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="min-w-0 flex-1 p-8">
+          <div className="mb-6 flex rounded-lg bg-sketch-hover p-1">
+            <button
+              type="button"
+              onClick={() => setMode('signup')}
+              className={`flex-1 rounded-md py-2 text-sm transition ${
+                isSignup ? 'bg-white text-sketch-heading' : 'text-sketch-muted'
+              }`}
+            >
+              Sign up
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode('signin')}
+              className={`flex-1 rounded-md py-2 text-sm transition ${
+                !isSignup ? 'bg-white text-sketch-heading' : 'text-sketch-muted'
+              }`}
+            >
+              Sign in
+            </button>
+          </div>
+
+          <h1 className="font-handwritten text-2xl text-sketch-heading">
+            {isSignup ? 'Create your account' : 'Welcome back'}
+          </h1>
+          <p className="mb-6 mt-1 text-sm text-sketch-muted">
+            {isSignup ? 'Get started — free for 14 days.' : 'Sign in to continue.'}
+          </p>
+
+          <form className="flex flex-col gap-3.5">
+            {isSignup && (
+              <label className="flex flex-col gap-1.5 text-xs text-sketch-label">
+                Full name
+                <input
+                  type="text"
+                  disabled
+                  placeholder="Jane Doe"
+                  className="rounded-lg border-[1.5px] border-sketch-border px-3.5 py-2.5 text-sm text-sketch-text placeholder:text-sketch-label/70 disabled:bg-white"
+                />
+              </label>
+            )}
+
+            <label className="flex flex-col gap-1.5 text-xs text-sketch-label">
+              Work email
+              <input
+                type="email"
+                disabled
+                placeholder="you@firm.com"
+                className="rounded-lg border-[1.5px] border-sketch-border px-3.5 py-2.5 text-sm text-sketch-text placeholder:text-sketch-label/70 disabled:bg-white"
+              />
+            </label>
+
+            <label className="flex flex-col gap-1.5 text-xs text-sketch-label">
+              <span className="flex items-baseline justify-between">
+                Password
+                {!isSignup && <span className="text-[11px] text-sketch-accent">Forgot?</span>}
+              </span>
+              <input
+                type="password"
+                disabled
+                placeholder="••••••••"
+                className="rounded-lg border-[1.5px] border-sketch-border px-3.5 py-2.5 text-sm text-sketch-text placeholder:text-sketch-label/70 disabled:bg-white"
+              />
+            </label>
+          </form>
+
           <Link
-            to="/signup"
-            className="rounded-full bg-accent-600 px-8 py-3 text-sm font-semibold text-white transition hover:bg-accent-700"
+            to="/home"
+            className="mt-3.5 block rounded-lg bg-sketch-accent py-3 text-center text-sm font-medium text-white"
           >
-            Get started
+            {isSignup ? 'Get started' : 'Sign in'}
           </Link>
-          <Link
-            to="/sign-in"
-            className="text-sm font-medium text-white/90 underline-offset-4 hover:text-white hover:underline"
-          >
-            Already have an account? Sign in
-          </Link>
+
+          <div className="my-3.5 flex items-center gap-2.5">
+            <span className="h-px flex-1 bg-sketch-border" />
+            <span className="text-[11px] text-sketch-label">or</span>
+            <span className="h-px flex-1 bg-sketch-border" />
+          </div>
+
+          <div className="flex gap-2.5">
+            <div className="flex-1 rounded-lg border-[1.5px] border-sketch-border py-2.5 text-center text-sm text-sketch-muted">
+              Google
+            </div>
+            <div className="flex-1 rounded-lg border-[1.5px] border-sketch-border py-2.5 text-center text-sm text-sketch-muted">
+              SSO
+            </div>
+          </div>
+
+          <p className="mt-5 text-center text-xs text-sketch-label">
+            {isSignup ? 'Already have an account?' : "Don't have an account?"}{' '}
+            <button
+              type="button"
+              onClick={() => setMode(isSignup ? 'signin' : 'signup')}
+              className="text-sketch-accent"
+            >
+              {isSignup ? 'Sign in' : 'Sign up'}
+            </button>
+          </p>
         </div>
       </div>
     </div>

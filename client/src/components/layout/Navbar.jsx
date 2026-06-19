@@ -11,12 +11,6 @@ export default function Navbar() {
           Company Intelligence
         </Link>
 
-        <nav className="hidden items-center gap-6 text-sm font-medium text-ink-700 sm:flex">
-          <Link to="/directory" className="hover:text-ink-950">
-            Directory
-          </Link>
-        </nav>
-
         <Link
           to="/sign-in"
           className="rounded-full border border-ink-100 px-4 py-1.5 text-sm font-medium text-ink-700 hover:border-ink-300 hover:text-ink-950"

@@ -7,7 +7,14 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5173/signup)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5173/sign-in)",
       "Bash(npm run *)",
-      "Bash(curl -s \"http://localhost:5173/src/components/directory/CompanyCard.jsx\")"
+      "Bash(curl -s \"http://localhost:5173/src/components/directory/CompanyCard.jsx\")",
+      "Bash(npx eslint *)",
+      "Bash(echo \"exit:$?\")",
+      "Bash(grep -m1 \"@name Check$\" /Users/mac/coding/company_intelligence/client/node_modules/lucide-react/dist/lucide-react.d.ts)",
+      "Bash(git status *)",
+      "Bash(echo \"eslint exit:$?\")",
+      "Bash(git check-ignore *)",
+      "Bash(git ls-remote *)"
     ],
     "additionalDirectories": [
       "/Users/mac/coding/company_intelligence/server"

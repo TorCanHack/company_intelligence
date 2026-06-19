@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { getCompanies, getSectors } from '../lib/api';
 import Hero from '../components/directory/Hero';
 import CompanyGrid from '../components/directory/CompanyGrid';
@@ -6,9 +7,12 @@ import CompanyGrid from '../components/directory/CompanyGrid';
 const PAGE_SIZE = 12;
 
 export default function DirectoryPage() {
+  const [searchParams] = useSearchParams();
+  const initialSearch = searchParams.get('search') ?? '';
+
   const [sectors, setSectors] = useState([]);
-  const [searchInput, setSearchInput] = useState('');
-  const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState(initialSearch);
+  const [search, setSearch] = useState(initialSearch);
   const [sector, setSector] = useState('');
   const [page, setPage] = useState(1);
   const [companies, setCompanies] = useState([]);
