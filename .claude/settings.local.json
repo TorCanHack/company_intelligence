@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p /Users/mac/coding/company_intelligence/server/db && ls /Users/mac/coding/company_intelligence/server)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5173/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5173/directory)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5173/signup)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5173/sign-in)",
+      "Bash(npm run *)",
+      "Bash(curl -s \"http://localhost:5173/src/components/directory/CompanyCard.jsx\")"
+    ],
+    "additionalDirectories": [
+      "/Users/mac/coding/company_intelligence/server"
+    ]
+  }
+}

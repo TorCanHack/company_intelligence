@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --color-ink-950: #0b1320;
+  --color-ink-900: #111a2c;
+  --color-ink-700: #2c3a52;
+  --color-ink-500: #5b6b85;
+  --color-ink-300: #97a3b8;
+  --color-ink-100: #e7eaf0;
+  --color-ink-50: #f5f6f9;
+
+  --color-accent-700: #0f5132;
+  --color-accent-600: #157347;
+  --color-accent-500: #1d8a5a;
+  --color-accent-100: #d9f0e3;
+
+  --font-handwritten: "Architects Daughter", cursive;
+  --font-script: "Kalam", cursive;
+
+  --color-sketch-bg: #e7e5df;
+  --color-sketch-border: #e6e5e1;
+  --color-sketch-divider: #dcdbd5;
+  --color-sketch-muted: #97958c;
+  --color-sketch-label: #a09e95;
+  --color-sketch-text: #33322e;
+  --color-sketch-heading: #1d1d1b;
+  --color-sketch-hover: #f2f0ea;
+  --color-sketch-chip: #ece7dd;
+  --color-sketch-accent: #3b5bdb;
+}
+
+body {
+  background-color: var(--color-ink-50);
+  color: var(--color-ink-950);
+  font-family: var(--font-sans);
+}
+
+.font-financial {
+  font-family: var(--font-mono);
+  font-feature-settings: "tnum";
+}
+
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(2%, -4%) scale(1.08); }
+}
+
+.animate-drift {
+  animation: drift 9s ease-in-out infinite;
+}
