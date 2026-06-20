@@ -8,12 +8,8 @@ const NAV_ITEMS = [
   { id: 'signals', label: 'Signals', to: '/signals' },
 ];
 
-const WATCHLIST_PREVIEW = [
-  { name: 'Acme Corp', active: true },
-  { name: 'Northwind', active: true },
-  { name: 'Globex', active: false },
-  { name: 'Initech', active: true },
-];
+// Real watchlist tracking isn't wired up yet — always empty for now.
+const WATCHLIST_PREVIEW = [];
 
 export default function Sidebar({ current = 'home' }) {
   const { user } = useAuth();
@@ -25,7 +21,7 @@ export default function Sidebar({ current = 'home' }) {
   };
 
   return (
-    <div className="flex h-full min-h-190 w-50 flex-none flex-col border-r border-dashed border-sketch-divider p-3.5">
+    <div className="flex h-full w-50 flex-none flex-col overflow-y-auto border-r border-dashed border-sketch-divider p-3.5">
       <div className="mb-6 flex items-center gap-2 px-1.5">
         <span className="size-3.5 flex-none rounded-full bg-sketch-accent" />
         <span className="font-handwritten text-sm text-sketch-heading">Company Intelligence</span>
@@ -52,15 +48,25 @@ export default function Sidebar({ current = 'home' }) {
       <div className="mb-2.5 mt-6 px-1.5 text-[11px] uppercase tracking-wide text-sketch-label">
         Watchlist
       </div>
-      <div className="flex flex-col gap-2.5">
-        {WATCHLIST_PREVIEW.map((item) => (
-          <Link key={item.name} to="/directory" className="flex items-center gap-2 px-1.5">
-            <span className="size-4.5 flex-none rounded bg-sketch-chip" />
-            <span className="flex-1 truncate text-xs text-sketch-text">{item.name}</span>
-            <span className={`size-1.5 flex-none rounded-full ${item.active ? 'bg-sketch-accent' : 'bg-sketch-border'}`} />
-          </Link>
-        ))}
-      </div>
+      {WATCHLIST_PREVIEW.length === 0 ? (
+        <Link
+          to="/directory"
+          className="flex flex-col items-center gap-1 rounded-lg border border-dashed border-sketch-divider px-2.5 py-3 text-center"
+        >
+          <span className="text-[11px] text-sketch-muted">No companies tracked yet</span>
+          <span className="text-[11px] font-medium text-sketch-accent">+ Track a company</span>
+        </Link>
+      ) : (
+        <div className="flex flex-col gap-2.5">
+          {WATCHLIST_PREVIEW.map((item) => (
+            <Link key={item.name} to={`/companies/${item.slug}`} className="flex items-center gap-2 px-1.5">
+              <span className="size-4.5 flex-none rounded bg-sketch-chip" />
+              <span className="flex-1 truncate text-xs text-sketch-text">{item.name}</span>
+              <span className={`size-1.5 flex-none rounded-full ${item.active ? 'bg-sketch-accent' : 'bg-sketch-border'}`} />
+            </Link>
+          ))}
+        </div>
+      )}
 
       {user ? (
         <button

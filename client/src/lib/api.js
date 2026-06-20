@@ -30,3 +30,10 @@ export const getCompanies = ({ search = '', sector = '', page = 1, pageSize = 20
 };
 
 export const getCompanyBySlug = (slug) => request(`/api/companies/${encodeURIComponent(slug)}`);
+
+export const getSignals = ({ limit = 20 } = {}) => {
+  const params = new URLSearchParams();
+  params.set('limit', String(limit));
+
+  return request(`/api/signals?${params.toString()}`);
+};

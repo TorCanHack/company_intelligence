@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getCompanyBySlug } from '../lib/api';
 import { deriveCompanyMetrics, deriveFundingSignals } from '../lib/companyInsights';
+import { addRecentView } from '../lib/recentViews';
 import Sidebar from '../components/layout/Sidebar';
 import CompanyHeader from '../components/company/CompanyHeader';
 import CompanyTabs from '../components/company/CompanyTabs';
@@ -32,7 +33,16 @@ export default function CompanyProfilePage() {
 
       try {
         const result = await getCompanyBySlug(slug);
-        if (active) setData(result);
+        if (active) {
+          setData(result);
+          addRecentView({
+            slug: result.company.slug,
+            name: result.company.name,
+            sector: result.company.sector,
+            employeeRange: result.company.employee_range,
+            stage: result.fundingRounds[0]?.round_type ?? null,
+          });
+        }
       } catch (err) {
         if (active) {
           setError(err.message);
@@ -85,28 +95,30 @@ export default function CompanyProfilePage() {
   const signals = deriveFundingSignals(fundingRounds);
 
   return (
-    <div className="font-script -mx-6 -my-10 min-h-[calc(100vh-73px)] bg-sketch-bg px-6 py-10">
-      <div className="mx-auto max-w-[1180px]">
-        <div className="mb-3 text-sm text-sketch-muted">
+    <div className="font-script -mx-6 -my-10 flex h-[calc(100vh-73px)] flex-col overflow-hidden bg-sketch-bg px-6 py-10">
+      <div className="mx-auto flex h-full w-full max-w-[1180px] flex-col">
+        <div className="mb-3 flex-none text-sm text-sketch-muted">
           <Link to="/directory" className="text-sketch-muted hover:text-sketch-text">
             ← Directory
           </Link>{' '}
           · Company profile
         </div>
 
-        <div className="flex min-h-190 overflow-hidden rounded-sm border border-sketch-border bg-white shadow-sm">
+        <div className="flex min-h-0 flex-1 overflow-hidden rounded-sm border border-sketch-border bg-white shadow-sm">
           <Sidebar current="watch" />
 
-          <div className="flex min-w-0 flex-1 flex-col">
-            <CompanyHeader
-              company={company}
-              lastRound={lastRound}
-              totalRaisedUsd={totalRaisedUsd}
-              valuationUsd={valuationUsd}
-            />
-            <CompanyTabs active={tab} onChange={setTab} />
+          <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+            <div className="flex-none">
+              <CompanyHeader
+                company={company}
+                lastRound={lastRound}
+                totalRaisedUsd={totalRaisedUsd}
+                valuationUsd={valuationUsd}
+              />
+              <CompanyTabs active={tab} onChange={setTab} />
+            </div>
 
-            <div className="p-5.5">
+            <div className="flex-1 overflow-y-auto p-5.5">
               {tab === 'overview' && (
                 <OverviewTab
                   company={company}

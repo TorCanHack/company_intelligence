@@ -1,4 +1,5 @@
-import { Search } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Search, User } from 'lucide-react';
 
 export default function Topbar() {
   return (
@@ -11,13 +12,16 @@ export default function Topbar() {
           className="w-full bg-transparent text-sm text-sketch-text placeholder:text-sketch-label focus:outline-none"
         />
       </div>
-      <button type="button" className="flex-none text-[13px] text-sketch-muted">
+      <Link to="/account?tab=billing" className="flex-none text-[13px] text-sketch-muted hover:text-sketch-text">
         Upgrade
-      </button>
-      <span className="flex size-9 flex-none items-center justify-center rounded-lg border-[1.5px] border-sketch-border text-sm text-sketch-label">
-        #
-      </span>
-      <span className="size-9 flex-none rounded-full bg-sketch-accent/25" />
+      </Link>
+      <Link
+        to="/account"
+        className="flex size-9 flex-none items-center justify-center rounded-full bg-sketch-accent/25 text-sketch-accent hover:bg-sketch-accent/35"
+        aria-label="Account"
+      >
+        <User className="size-4.5" />
+      </Link>
     </div>
   );
 }

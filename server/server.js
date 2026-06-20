@@ -140,6 +140,26 @@ app.get('/api/companies', async (req, res) => {
   }
 });
 
+app.get('/api/signals', async (req, res) => {
+  try {
+    const limit = Math.min(50, Math.max(1, Number.parseInt(req.query.limit, 10) || 20));
+
+    const { rows } = await pool.query(
+      `select fr.id, c.name as company_name, c.slug as company_slug,
+              fr.round_type, fr.amount_usd, fr.announced_date
+       from funding_rounds fr
+       join companies c on c.id = fr.company_id
+       order by fr.announced_date desc
+       limit $1`,
+      [limit]
+    );
+
+    res.json({ signals: rows });
+  } catch (error) {
+    res.status(500).json({ signals: [], message: databaseErrorMessage(error) });
+  }
+});
+
 app.get('/api/companies/:slug', requireAuth, async (req, res) => {
   try {
     const { rows: companyRows } = await pool.query(
