@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase';
 const PERKS = ['40M+ company profiles', 'Funding, signals & org charts', '14-day trial · no card'];
 
 export default function StartPage() {
-  const { pathname } = useLocation();
+  const { pathname, state } = useLocation();
   const navigate = useNavigate();
   const [mode, setMode] = useState(pathname === '/sign-in' ? 'signin' : 'signup');
   const isSignup = mode === 'signup';
@@ -33,7 +33,7 @@ export default function StartPage() {
       return;
     }
 
-    navigate('/home');
+    navigate(state?.from?.pathname ?? '/home', { replace: true });
   };
 
   return (

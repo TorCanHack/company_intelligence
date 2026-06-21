@@ -7,6 +7,7 @@ import Signals from './pages/Signals';
 import AccountPage from './pages/AccountPage';
 import DirectoryPage from './pages/DirectoryPage';
 import CompanyProfilePage from './pages/CompanyProfilePage';
+import RequireAuth from './components/RequireAuth';
 
 function App() {
   return (
@@ -14,12 +15,12 @@ function App() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/sign-in" element={<StartPage />} />
       <Route path="/signup" element={<StartPage />} />
-      <Route path="/home" element={<HomePage />} />
-      <Route path="/watchlist" element={<Watchlist />} />
-      <Route path="/signals" element={<Signals />} />
-      <Route path="/account" element={<AccountPage />} />
-      <Route path="/directory" element={<DirectoryPage />} />
-      <Route path="/companies/:slug" element={<CompanyProfilePage />} />
+      <Route path="/home" element={<RequireAuth><HomePage /></RequireAuth>} />
+      <Route path="/watchlist" element={<RequireAuth><Watchlist /></RequireAuth>} />
+      <Route path="/signals" element={<RequireAuth><Signals /></RequireAuth>} />
+      <Route path="/account" element={<RequireAuth><AccountPage /></RequireAuth>} />
+      <Route path="/directory" element={<RequireAuth><DirectoryPage /></RequireAuth>} />
+      <Route path="/companies/:slug" element={<RequireAuth><CompanyProfilePage /></RequireAuth>} />
     </Routes>
   );
 }

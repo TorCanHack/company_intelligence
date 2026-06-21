@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 const { createClient } = require('@supabase/supabase-js');
 const pool = require('./db');
 
@@ -19,15 +20,6 @@ const requireAuth = async (req, res, next) => {
   next();
 };
 
-const optionalAuth = async (req, _res, next) => {
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token) return next();
-
-  const { data: { user }, error } = await supabase.auth.getUser(token);
-  if (!error && user) req.user = user;
-  next();
-};
-
 const app = express();
 const port = process.env.PORT || 3001;
 const host = process.env.HOST || '127.0.0.1';
@@ -35,6 +27,26 @@ const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
 
 app.use(cors({ origin: clientUrl }));
 app.use(express.json());
+
+// Blunt instrument against unauthenticated probing — keyed by IP since there's no user yet.
+const anonLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api', anonLimiter);
+
+// Throttles how fast a single account can pull company records, since that's the data
+// being protected. Keyed by user id so it survives IP rotation; falls back to IP for
+// routes hit before auth runs.
+const dataLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  limit: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.user?.id || ipKeyGenerator(req.ip),
+});
 
 const databaseErrorMessage = (error) => {
   if (error.code === 'ENOTFOUND') {
@@ -84,7 +96,7 @@ app.get('/api/health', async (_req, res) => {
   }
 });
 
-app.get('/api/sectors', async (_req, res) => {
+app.get('/api/sectors', requireAuth, dataLimiter, async (_req, res) => {
   try {
     const { rows } = await pool.query('select id, name, slug from sectors order by name');
     res.json({ sectors: rows });
@@ -93,7 +105,7 @@ app.get('/api/sectors', async (_req, res) => {
   }
 });
 
-app.get('/api/companies', optionalAuth, async (req, res) => {
+app.get('/api/companies', requireAuth, dataLimiter, async (req, res) => {
   try {
     const { search, sector, page, pageSize } = parseListParams(req.query);
     const offset = (page - 1) * pageSize;
@@ -152,7 +164,7 @@ app.get('/api/companies', optionalAuth, async (req, res) => {
   }
 });
 
-app.get('/api/signals', async (req, res) => {
+app.get('/api/signals', requireAuth, dataLimiter, async (req, res) => {
   try {
     const limit = Math.min(50, Math.max(1, Number.parseInt(req.query.limit, 10) || 20));
 
@@ -172,7 +184,7 @@ app.get('/api/signals', async (req, res) => {
   }
 });
 
-app.get('/api/companies/:slug', requireAuth, async (req, res) => {
+app.get('/api/companies/:slug', requireAuth, dataLimiter, async (req, res) => {
   try {
     const { rows: companyRows } = await pool.query(
       `select c.*, s.name as sector, s.slug as sector_slug,
