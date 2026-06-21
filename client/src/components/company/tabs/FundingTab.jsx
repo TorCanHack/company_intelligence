@@ -10,7 +10,7 @@ export default function FundingTab({ fundingRounds, totalRaisedUsd, valuationUsd
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="grid grid-cols-3 gap-3.5">
+      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
         <Card>
           <Stat label="Total raised" value={formatUsd(totalRaisedUsd)} />
         </Card>
@@ -26,27 +26,29 @@ export default function FundingTab({ fundingRounds, totalRaisedUsd, valuationUsd
         {fundingRounds.length === 0 ? (
           <p className="text-sm text-sketch-muted">No funding rounds on record.</p>
         ) : (
-          <div>
-            <div className="grid grid-cols-[1fr_1fr_1.4fr_0.8fr] border-b border-dashed border-sketch-divider pb-2.5 text-[10px] uppercase tracking-wide text-sketch-label">
-              <span>Round</span>
-              <span>Amount</span>
-              <span>Lead investor</span>
-              <span>Date</span>
+          <div className="overflow-x-auto">
+            <div className="min-w-105">
+              <div className="grid grid-cols-[1fr_1fr_1.4fr_0.8fr] border-b border-dashed border-sketch-divider pb-2.5 text-[10px] uppercase tracking-wide text-sketch-label">
+                <span>Round</span>
+                <span>Amount</span>
+                <span>Lead investor</span>
+                <span>Date</span>
+              </div>
+              {fundingRounds.map((round) => {
+                const lead = round.investors.find((investor) => investor.is_lead) || round.investors[0];
+                return (
+                  <div
+                    key={round.id}
+                    className="grid grid-cols-[1fr_1fr_1.4fr_0.8fr] items-center border-b border-dashed border-sketch-divider py-3 text-[13px] last:border-0"
+                  >
+                    <span className="text-sketch-text">{round.round_type}</span>
+                    <span className="font-handwritten text-sketch-heading">{formatUsd(round.amount_usd)}</span>
+                    <span className="truncate text-sketch-muted">{lead?.name || '—'}</span>
+                    <span className="text-xs text-sketch-label">{formatDate(round.announced_date)}</span>
+                  </div>
+                );
+              })}
             </div>
-            {fundingRounds.map((round) => {
-              const lead = round.investors.find((investor) => investor.is_lead) || round.investors[0];
-              return (
-                <div
-                  key={round.id}
-                  className="grid grid-cols-[1fr_1fr_1.4fr_0.8fr] items-center border-b border-dashed border-sketch-divider py-3 text-[13px] last:border-0"
-                >
-                  <span className="text-sketch-text">{round.round_type}</span>
-                  <span className="font-handwritten text-sketch-heading">{formatUsd(round.amount_usd)}</span>
-                  <span className="truncate text-sketch-muted">{lead?.name || '—'}</span>
-                  <span className="text-xs text-sketch-label">{formatDate(round.announced_date)}</span>
-                </div>
-              );
-            })}
           </div>
         )}
       </Card>

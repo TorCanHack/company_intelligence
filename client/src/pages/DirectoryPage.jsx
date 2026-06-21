@@ -1,10 +1,28 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { Search } from 'lucide-react';
+import DashboardShell from '../components/layout/DashboardShell';
+import CompanyListCard from '../components/company/CompanyListCard';
 import { getCompanies, getSectors } from '../lib/api';
-import Hero from '../components/directory/Hero';
-import CompanyGrid from '../components/directory/CompanyGrid';
 
 const PAGE_SIZE = 12;
+
+function DirectoryTopbar({ searchInput, onSearchChange }) {
+  return (
+    <div className="flex items-center gap-4 border-b border-dashed border-sketch-divider px-3.5 py-3.5 sm:px-5.5">
+      <div className="flex flex-1 items-center gap-2.5 rounded-xl border-[1.5px] border-sketch-border px-4 py-2.5">
+        <Search className="size-4 flex-none text-sketch-label" />
+        <input
+          type="text"
+          value={searchInput}
+          onChange={(event) => onSearchChange(event.target.value)}
+          placeholder="Search companies by name, sector, or location…"
+          className="w-full bg-transparent text-sm text-sketch-text placeholder:text-sketch-label focus:outline-none"
+        />
+      </div>
+    </div>
+  );
+}
 
 export default function DirectoryPage() {
   const [searchParams] = useSearchParams();
@@ -63,49 +81,88 @@ export default function DirectoryPage() {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
-    <div className="flex flex-col gap-10">
-      <Hero
-        sectors={sectors}
-        searchInput={searchInput}
-        onSearchChange={setSearchInput}
-        sector={sector}
-        onSectorSelect={(slug) => {
-          setSector(slug);
-          setPage(1);
-        }}
-      />
+    <DashboardShell
+      current={null}
+      topbar={<DirectoryTopbar searchInput={searchInput} onSearchChange={setSearchInput} />}
+    >
+      <div className="mb-4">
+        <h1 className="font-handwritten text-3xl text-sketch-heading">Directory</h1>
+        <p className="mt-1.5 text-sm text-sketch-muted">
+          Browse every company we track and add the ones you want to watch.
+        </p>
+      </div>
 
-      <section className="flex flex-col gap-4">
-        {error ? (
-          <p className="text-sm text-red-600">{error}</p>
-        ) : (
-          <CompanyGrid companies={companies} loading={loading} />
-        )}
+      <div className="mb-5 flex flex-wrap gap-2.5">
+        <button
+          type="button"
+          onClick={() => {
+            setSector('');
+            setPage(1);
+          }}
+          className={`rounded-full px-4 py-2 text-sm ${
+            sector === '' ? 'bg-sketch-accent text-white' : 'border border-dashed border-sketch-divider text-sketch-muted'
+          }`}
+        >
+          All sectors
+        </button>
+        {sectors.map((s) => (
+          <button
+            key={s.slug}
+            type="button"
+            onClick={() => {
+              setSector(s.slug);
+              setPage(1);
+            }}
+            className={`rounded-full px-4 py-2 text-sm ${
+              sector === s.slug ? 'bg-sketch-accent text-white' : 'border border-dashed border-sketch-divider text-sketch-muted'
+            }`}
+          >
+            {s.name}
+          </button>
+        ))}
+      </div>
 
-        {!loading && !error && total > PAGE_SIZE && (
-          <div className="flex items-center justify-center gap-4 pt-2 text-sm text-ink-700">
-            <button
-              type="button"
-              disabled={page <= 1}
-              onClick={() => setPage((current) => current - 1)}
-              className="rounded-lg border border-ink-100 px-3 py-1.5 disabled:opacity-40"
-            >
-              Previous
-            </button>
-            <span>
-              Page {page} of {totalPages}
-            </span>
-            <button
-              type="button"
-              disabled={page >= totalPages}
-              onClick={() => setPage((current) => current + 1)}
-              className="rounded-lg border border-ink-100 px-3 py-1.5 disabled:opacity-40"
-            >
-              Next
-            </button>
+      {error ? (
+        <p className="text-sm text-red-600">{error}</p>
+      ) : loading ? (
+        <p className="text-sm text-sketch-muted">Loading companies…</p>
+      ) : companies.length === 0 ? (
+        <p className="rounded-[10px] border border-dashed border-sketch-divider py-10 text-center text-sm text-sketch-muted">
+          No companies match your search.
+        </p>
+      ) : (
+        <>
+          <div className="grid gap-5 lg:grid-cols-2">
+            {companies.map((company) => (
+              <CompanyListCard key={company.id} company={company} />
+            ))}
           </div>
-        )}
-      </section>
-    </div>
+
+          {total > PAGE_SIZE && (
+            <div className="mt-5 flex items-center justify-center gap-4 text-sm text-sketch-muted">
+              <button
+                type="button"
+                disabled={page <= 1}
+                onClick={() => setPage((current) => current - 1)}
+                className="rounded-full border border-dashed border-sketch-divider px-4 py-2 disabled:opacity-40"
+              >
+                Previous
+              </button>
+              <span>
+                Page {page} of {totalPages}
+              </span>
+              <button
+                type="button"
+                disabled={page >= totalPages}
+                onClick={() => setPage((current) => current + 1)}
+                className="rounded-full border border-dashed border-sketch-divider px-4 py-2 disabled:opacity-40"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </DashboardShell>
   );
 }

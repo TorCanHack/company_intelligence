@@ -3,7 +3,7 @@ import { Search, User } from 'lucide-react';
 
 export default function Topbar() {
   return (
-    <div className="flex items-center gap-4 border-b border-dashed border-sketch-divider px-5.5 py-3.5">
+    <div className="flex items-center gap-4 border-b border-dashed border-sketch-divider px-3.5 py-3.5 sm:px-5.5">
       <div className="flex flex-1 items-center gap-2.5 rounded-xl border-[1.5px] border-sketch-border px-4 py-2.5">
         <Search className="size-4 flex-none text-sketch-label" />
         <input

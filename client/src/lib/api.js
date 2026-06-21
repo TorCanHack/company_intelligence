@@ -2,10 +2,11 @@ import { supabase } from './supabase';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
-const request = async (path) => {
+const request = async (path, { method = 'GET' } = {}) => {
   const { data: { session } } = await supabase.auth.getSession();
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
+    method,
     headers: session ? { Authorization: `Bearer ${session.access_token}` } : {},
   });
   const body = await response.json();
@@ -30,6 +31,12 @@ export const getCompanies = ({ search = '', sector = '', page = 1, pageSize = 20
 };
 
 export const getCompanyBySlug = (slug) => request(`/api/companies/${encodeURIComponent(slug)}`);
+
+export const getWatchlist = () => request('/api/watchlist');
+
+export const addToWatchlist = (companyId) => request(`/api/watchlist/${companyId}`, { method: 'POST' });
+
+export const removeFromWatchlist = (companyId) => request(`/api/watchlist/${companyId}`, { method: 'DELETE' });
 
 export const getSignals = ({ limit = 20 } = {}) => {
   const params = new URLSearchParams();

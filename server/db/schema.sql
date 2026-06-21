@@ -114,3 +114,13 @@ create table sources (
   note text
 );
 create index idx_sources_company on sources (company_id);
+
+-- Not dropped above: holds real user data and must survive re-running this file.
+create table if not exists watchlist_items (
+  id serial primary key,
+  user_id uuid not null,
+  company_id int not null references companies(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  unique (user_id, company_id)
+);
+create index if not exists idx_watchlist_items_user on watchlist_items (user_id, created_at desc);

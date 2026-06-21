@@ -19,6 +19,15 @@ const requireAuth = async (req, res, next) => {
   next();
 };
 
+const optionalAuth = async (req, _res, next) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) return next();
+
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  if (!error && user) req.user = user;
+  next();
+};
+
 const app = express();
 const port = process.env.PORT || 3001;
 const host = process.env.HOST || '127.0.0.1';
@@ -84,7 +93,7 @@ app.get('/api/sectors', async (_req, res) => {
   }
 });
 
-app.get('/api/companies', async (req, res) => {
+app.get('/api/companies', optionalAuth, async (req, res) => {
   try {
     const { search, sector, page, pageSize } = parseListParams(req.query);
     const offset = (page - 1) * pageSize;
@@ -94,6 +103,7 @@ app.get('/api/companies', async (req, res) => {
          c.id, c.name, c.slug, c.city, c.founded_year, c.description,
          s.name as sector, s.slug as sector_slug,
          lr.round_type as last_round_type, lr.announced_date as last_round_date, lr.amount_usd as last_round_amount_usd,
+         (wi.id is not null) as is_tracked,
          count(*) over () as total_count
        from companies c
        left join sectors s on s.id = c.sector_id
@@ -104,11 +114,12 @@ app.get('/api/companies', async (req, res) => {
          order by announced_date desc
          limit 1
        ) lr on true
+       left join watchlist_items wi on wi.company_id = c.id and wi.user_id = $5
        where ($1 = '' or c.name ilike '%' || $1 || '%')
          and ($2 = '' or s.slug = $2)
        order by c.name
        limit $3 offset $4`,
-      [search, sector, pageSize, offset]
+      [search, sector, pageSize, offset, req.user?.id ?? null]
     );
 
     const companies = rows.map((row) => ({
@@ -120,6 +131,7 @@ app.get('/api/companies', async (req, res) => {
       description: row.description,
       sector: row.sector,
       sector_slug: row.sector_slug,
+      is_tracked: row.is_tracked,
       last_round: row.last_round_type
         ? { round_type: row.last_round_type, announced_date: row.last_round_date, amount_usd: row.last_round_amount_usd }
         : null,
@@ -163,11 +175,12 @@ app.get('/api/signals', async (req, res) => {
 app.get('/api/companies/:slug', requireAuth, async (req, res) => {
   try {
     const { rows: companyRows } = await pool.query(
-      `select c.*, s.name as sector, s.slug as sector_slug
+      `select c.*, s.name as sector, s.slug as sector_slug,
+         exists(select 1 from watchlist_items wi where wi.company_id = c.id and wi.user_id = $2) as is_tracked
        from companies c
        left join sectors s on s.id = c.sector_id
        where c.slug = $1`,
-      [req.params.slug]
+      [req.params.slug, req.user.id]
     );
 
     const company = companyRows[0];
@@ -223,6 +236,77 @@ app.get('/api/companies/:slug', requireAuth, async (req, res) => {
       valuationSignals: valuationSignals.rows,
       sources: sources.rows,
     });
+  } catch (error) {
+    res.status(500).json({ message: databaseErrorMessage(error) });
+  }
+});
+
+app.get('/api/watchlist', requireAuth, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `select
+         c.id, c.name, c.slug, c.city, c.founded_year, c.description,
+         s.name as sector, s.slug as sector_slug,
+         lr.round_type as last_round_type, lr.announced_date as last_round_date, lr.amount_usd as last_round_amount_usd
+       from watchlist_items wi
+       join companies c on c.id = wi.company_id
+       left join sectors s on s.id = c.sector_id
+       left join lateral (
+         select round_type, announced_date, amount_usd
+         from funding_rounds fr
+         where fr.company_id = c.id
+         order by announced_date desc
+         limit 1
+       ) lr on true
+       where wi.user_id = $1
+       order by wi.created_at desc`,
+      [req.user.id]
+    );
+
+    const companies = rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      city: row.city,
+      founded_year: row.founded_year,
+      description: row.description,
+      sector: row.sector,
+      sector_slug: row.sector_slug,
+      is_tracked: true,
+      last_round: row.last_round_type
+        ? { round_type: row.last_round_type, announced_date: row.last_round_date, amount_usd: row.last_round_amount_usd }
+        : null,
+    }));
+
+    res.json({ companies, total: companies.length });
+  } catch (error) {
+    res.status(500).json({ companies: [], total: 0, message: databaseErrorMessage(error) });
+  }
+});
+
+app.post('/api/watchlist/:companyId', requireAuth, async (req, res) => {
+  const companyId = Number.parseInt(req.params.companyId, 10);
+  if (!Number.isInteger(companyId)) return res.status(400).json({ message: 'Invalid company id.' });
+
+  try {
+    await pool.query(
+      `insert into watchlist_items (user_id, company_id) values ($1, $2)
+       on conflict (user_id, company_id) do nothing`,
+      [req.user.id, companyId]
+    );
+    res.json({ tracked: true });
+  } catch (error) {
+    res.status(500).json({ message: databaseErrorMessage(error) });
+  }
+});
+
+app.delete('/api/watchlist/:companyId', requireAuth, async (req, res) => {
+  const companyId = Number.parseInt(req.params.companyId, 10);
+  if (!Number.isInteger(companyId)) return res.status(400).json({ message: 'Invalid company id.' });
+
+  try {
+    await pool.query('delete from watchlist_items where user_id = $1 and company_id = $2', [req.user.id, companyId]);
+    res.json({ tracked: false });
   } catch (error) {
     res.status(500).json({ message: databaseErrorMessage(error) });
   }

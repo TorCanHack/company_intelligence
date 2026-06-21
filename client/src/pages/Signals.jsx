@@ -7,7 +7,7 @@ import { formatUsd, formatDate } from '../lib/format';
 
 function SignalsTopbar() {
   return (
-    <div className="flex items-center justify-between gap-4 border-b border-dashed border-sketch-divider px-5.5 py-4">
+    <div className="flex items-center justify-between gap-4 border-b border-dashed border-sketch-divider px-3.5 py-4 sm:px-5.5">
       <h1 className="font-handwritten text-2xl text-sketch-heading">Signals</h1>
       <span className="text-sm text-sketch-muted">Sort: Newest</span>
     </div>
