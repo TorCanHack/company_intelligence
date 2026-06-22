@@ -7,6 +7,7 @@ import Signals from './pages/Signals';
 import AccountPage from './pages/AccountPage';
 import DirectoryPage from './pages/DirectoryPage';
 import CompanyProfilePage from './pages/CompanyProfilePage';
+import FounderProfilePage from './pages/FounderProfilePage';
 import RequireAuth from './components/RequireAuth';
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
       <Route path="/account" element={<RequireAuth><AccountPage /></RequireAuth>} />
       <Route path="/directory" element={<RequireAuth><DirectoryPage /></RequireAuth>} />
       <Route path="/companies/:slug" element={<RequireAuth><CompanyProfilePage /></RequireAuth>} />
+      <Route path="/people/:id" element={<RequireAuth><FounderProfilePage /></RequireAuth>} />
     </Routes>
   );
 }

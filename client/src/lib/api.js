@@ -20,17 +20,32 @@ const request = async (path, { method = 'GET' } = {}) => {
 
 export const getSectors = () => request('/api/sectors');
 
-export const getCompanies = ({ search = '', sector = '', page = 1, pageSize = 20 } = {}) => {
+export const getCompanies = ({
+  search = '',
+  sector = '',
+  page = 1,
+  pageSize = 20,
+  founderSerial = false,
+  founderCrossSector = false,
+  founderPriorExit = false,
+  founderRegion = '',
+} = {}) => {
   const params = new URLSearchParams();
   if (search) params.set('search', search);
   if (sector) params.set('sector', sector);
   params.set('page', String(page));
   params.set('pageSize', String(pageSize));
+  if (founderSerial) params.set('founderSerial', 'true');
+  if (founderCrossSector) params.set('founderCrossSector', 'true');
+  if (founderPriorExit) params.set('founderPriorExit', 'true');
+  if (founderRegion) params.set('founderRegion', founderRegion);
 
   return request(`/api/companies?${params.toString()}`);
 };
 
 export const getCompanyBySlug = (slug) => request(`/api/companies/${encodeURIComponent(slug)}`);
+
+export const getPerson = (id) => request(`/api/people/${encodeURIComponent(id)}`);
 
 export const getWatchlist = () => request('/api/watchlist');
 

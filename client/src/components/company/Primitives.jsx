@@ -33,16 +33,34 @@ export function Stat({ label, value, accent }) {
   );
 }
 
-export function PersonRow({ person, onView }) {
+export function FounderBadges({ badges }) {
+  if (!badges || badges.length === 0) return null;
+
+  return (
+    <div className="mt-1 flex flex-wrap gap-1.5">
+      {badges.map((badge) => (
+        <span
+          key={badge}
+          className="rounded-full border border-sketch-accent px-2.5 py-0.5 text-[10px] text-sketch-accent"
+        >
+          {badge}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+export function PersonRow({ person, badges, onView }) {
   return (
     <div className="flex items-center gap-2.5">
       <span className="size-7.5 flex-none rounded-full bg-sketch-accent/20" />
       <div className="min-w-0 flex-1">
         <div className="text-[13px] text-sketch-text">{person.name}</div>
         <div className="text-[11px] text-sketch-label">{person.role}</div>
+        <FounderBadges badges={badges} />
       </div>
       {onView && (
-        <button type="button" onClick={onView} className="text-[11px] text-sketch-accent">
+        <button type="button" onClick={onView} className="flex-none text-[11px] text-sketch-accent">
           View
         </button>
       )}

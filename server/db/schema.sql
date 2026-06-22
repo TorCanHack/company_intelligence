@@ -6,6 +6,7 @@ drop table if exists deal_investors cascade;
 drop table if exists funding_rounds cascade;
 drop table if exists investors cascade;
 drop table if exists founders cascade;
+drop table if exists people cascade;
 drop table if exists companies cascade;
 drop table if exists sectors cascade;
 
@@ -33,9 +34,20 @@ create table companies (
   last_verified_at timestamptz
 );
 
+-- Canonical identity for a founder, so the same person can be linked across
+-- multiple companies (serial/cross-sector founder detection relies on this).
+create table people (
+  id serial primary key,
+  full_name text not null,
+  linkedin_url text,
+  bio text,
+  created_at timestamptz not null default now()
+);
+
 create table founders (
   id serial primary key,
   company_id int not null references companies(id) on delete cascade,
+  person_id int references people(id) on delete set null,
   name text not null,
   role text,
   bio text,
@@ -44,6 +56,7 @@ create table founders (
   display_order smallint not null default 0
 );
 create index idx_founders_company on founders (company_id, display_order);
+create index idx_founders_person on founders (person_id);
 
 create table investors (
   id serial primary key,

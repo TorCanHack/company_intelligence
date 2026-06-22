@@ -7,6 +7,14 @@ import { getCompanies, getSectors } from '../lib/api';
 
 const PAGE_SIZE = 12;
 
+const FOUNDER_REGIONS = [
+  { slug: 'west-africa', label: 'West Africa' },
+  { slug: 'east-africa', label: 'East Africa' },
+  { slug: 'southern-africa', label: 'Southern Africa' },
+  { slug: 'north-africa', label: 'North Africa' },
+  { slug: 'central-africa', label: 'Central Africa' },
+];
+
 function DirectoryTopbar({ searchInput, onSearchChange }) {
   return (
     <div className="flex items-center gap-4 border-b border-dashed border-sketch-divider px-3.5 py-3.5 sm:px-5.5">
@@ -32,6 +40,10 @@ export default function DirectoryPage() {
   const [searchInput, setSearchInput] = useState(initialSearch);
   const [search, setSearch] = useState(initialSearch);
   const [sector, setSector] = useState('');
+  const [founderSerial, setFounderSerial] = useState(false);
+  const [founderCrossSector, setFounderCrossSector] = useState(false);
+  const [founderPriorExit, setFounderPriorExit] = useState(false);
+  const [founderRegion, setFounderRegion] = useState('');
   const [page, setPage] = useState(1);
   const [companies, setCompanies] = useState([]);
   const [total, setTotal] = useState(0);
@@ -61,7 +73,10 @@ export default function DirectoryPage() {
       setError(null);
 
       try {
-        const data = await getCompanies({ search, sector, page, pageSize: PAGE_SIZE });
+        const data = await getCompanies({
+          search, sector, page, pageSize: PAGE_SIZE,
+          founderSerial, founderCrossSector, founderPriorExit, founderRegion,
+        });
         if (!active) return;
         setCompanies(data.companies);
         setTotal(data.total);
@@ -76,7 +91,7 @@ export default function DirectoryPage() {
     return () => {
       active = false;
     };
-  }, [search, sector, page]);
+  }, [search, sector, page, founderSerial, founderCrossSector, founderPriorExit, founderRegion]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -120,6 +135,46 @@ export default function DirectoryPage() {
             {s.name}
           </button>
         ))}
+      </div>
+
+      <div className="mb-5 flex flex-wrap items-center gap-2.5">
+        {[
+          { label: 'Serial founders', active: founderSerial, onToggle: () => setFounderSerial((v) => !v) },
+          { label: 'Multi-sector founders', active: founderCrossSector, onToggle: () => setFounderCrossSector((v) => !v) },
+          { label: 'Prior exits', active: founderPriorExit, onToggle: () => setFounderPriorExit((v) => !v) },
+        ].map(({ label, active, onToggle }) => (
+          <button
+            key={label}
+            type="button"
+            onClick={() => {
+              onToggle();
+              setPage(1);
+            }}
+            className={`rounded-full px-4 py-2 text-sm ${
+              active ? 'bg-sketch-accent text-white' : 'border border-dashed border-sketch-divider text-sketch-muted'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+
+        <select
+          value={founderRegion}
+          onChange={(event) => {
+            setFounderRegion(event.target.value);
+            setPage(1);
+          }}
+          className={`rounded-full border border-dashed border-sketch-divider px-4 py-2 text-sm ${
+            founderRegion ? 'bg-sketch-accent text-white' : 'text-sketch-muted'
+          }`}
+        >
+          <option value="">Founder region: any</option>
+          {FOUNDER_REGIONS.map((region) => (
+            <option key={region.slug} value={region.slug}>
+              {region.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       {error ? (

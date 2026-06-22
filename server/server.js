@@ -3,6 +3,7 @@ const cors = require('cors');
 const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 const { createClient } = require('@supabase/supabase-js');
 const pool = require('./db');
+const { REGIONS } = require('./lib/regions');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -80,7 +81,20 @@ const parseListParams = (query) => {
   const page = Math.max(1, Number.parseInt(query.page, 10) || 1);
   const pageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, Number.parseInt(query.pageSize, 10) || DEFAULT_PAGE_SIZE));
 
-  return { search, sector, page, pageSize };
+  const founderSerial = query.founderSerial === 'true';
+  const founderCrossSector = query.founderCrossSector === 'true';
+  const founderPriorExit = query.founderPriorExit === 'true';
+
+  const founderRegion = typeof query.founderRegion === 'string' ? query.founderRegion.trim() : '';
+  if (founderRegion && !REGIONS[founderRegion]) {
+    throw Object.assign(new Error('Invalid founderRegion parameter.'), { status: 400 });
+  }
+
+  return {
+    search, sector, page, pageSize,
+    founderSerial, founderCrossSector, founderPriorExit,
+    founderCountries: founderRegion ? REGIONS[founderRegion] : null,
+  };
 };
 
 app.get('/api/health', async (_req, res) => {
@@ -107,11 +121,39 @@ app.get('/api/sectors', requireAuth, dataLimiter, async (_req, res) => {
 
 app.get('/api/companies', requireAuth, dataLimiter, async (req, res) => {
   try {
-    const { search, sector, page, pageSize } = parseListParams(req.query);
+    const {
+      search, sector, page, pageSize,
+      founderSerial, founderCrossSector, founderPriorExit, founderCountries,
+    } = parseListParams(req.query);
     const offset = (page - 1) * pageSize;
 
     const { rows } = await pool.query(
-      `select
+      `with founder_company_counts as (
+         select person_id, count(distinct company_id) as companies_count
+         from founders
+         where person_id is not null
+         group by person_id
+       ),
+       founder_sector_counts as (
+         select f.person_id, count(distinct c.sector_id) as sector_count
+         from founders f
+         join companies c on c.id = f.company_id
+         where f.person_id is not null and c.sector_id is not null
+         group by f.person_id
+       ),
+       founder_prior_exit as (
+         select distinct f.person_id
+         from founders f
+         join companies c on c.id = f.company_id
+         where f.person_id is not null and c.status = 'acquired'
+       ),
+       founder_region as (
+         select distinct f.person_id
+         from founders f
+         join companies c on c.id = f.company_id
+         where f.person_id is not null and c.country = any($9::text[])
+       )
+       select
          c.id, c.name, c.slug, c.city, c.founded_year, c.description,
          s.name as sector, s.slug as sector_slug,
          lr.round_type as last_round_type, lr.announced_date as last_round_date, lr.amount_usd as last_round_amount_usd,
@@ -129,9 +171,32 @@ app.get('/api/companies', requireAuth, dataLimiter, async (req, res) => {
        left join watchlist_items wi on wi.company_id = c.id and wi.user_id = $5
        where ($1 = '' or c.name ilike '%' || $1 || '%')
          and ($2 = '' or s.slug = $2)
+         and ($6 = false or exists (
+           select 1 from founders f
+           join founder_company_counts fcc on fcc.person_id = f.person_id
+           where f.company_id = c.id and fcc.companies_count >= 2
+         ))
+         and ($7 = false or exists (
+           select 1 from founders f
+           join founder_sector_counts fsc on fsc.person_id = f.person_id
+           where f.company_id = c.id and fsc.sector_count >= 2
+         ))
+         and ($8 = false or exists (
+           select 1 from founders f
+           join founder_prior_exit fpe on fpe.person_id = f.person_id
+           where f.company_id = c.id
+         ))
+         and ($9::text[] is null or exists (
+           select 1 from founders f
+           join founder_region fre on fre.person_id = f.person_id
+           where f.company_id = c.id
+         ))
        order by c.name
        limit $3 offset $4`,
-      [search, sector, pageSize, offset, req.user?.id ?? null]
+      [
+        search, sector, pageSize, offset, req.user?.id ?? null,
+        founderSerial, founderCrossSector, founderPriorExit, founderCountries,
+      ]
     );
 
     const companies = rows.map((row) => ({
@@ -202,7 +267,27 @@ app.get('/api/companies/:slug', requireAuth, dataLimiter, async (req, res) => {
 
     const [founders, fundingRounds, capTable, valuationSignals, sources] = await Promise.all([
       pool.query(
-        'select * from founders where company_id = $1 order by display_order, id',
+        `select f.*,
+           coalesce(
+             json_agg(
+               json_build_object(
+                 'company_id', pc.id,
+                 'company_name', pc.name,
+                 'company_slug', pc.slug,
+                 'sector', ps.name,
+                 'founded_year', pc.founded_year,
+                 'status', pc.status
+               ) order by pc.founded_year nulls last, pc.id
+             ) filter (where pc.id is not null),
+             '[]'
+           ) as portfolio
+         from founders f
+         left join founders pf on pf.person_id = f.person_id and f.person_id is not null
+         left join companies pc on pc.id = pf.company_id
+         left join sectors ps on ps.id = pc.sector_id
+         where f.company_id = $1
+         group by f.id
+         order by f.display_order, f.id`,
         [company.id]
       ),
       pool.query(
@@ -248,6 +333,38 @@ app.get('/api/companies/:slug', requireAuth, dataLimiter, async (req, res) => {
       valuationSignals: valuationSignals.rows,
       sources: sources.rows,
     });
+  } catch (error) {
+    res.status(500).json({ message: databaseErrorMessage(error) });
+  }
+});
+
+app.get('/api/people/:id', requireAuth, dataLimiter, async (req, res) => {
+  const personId = Number.parseInt(req.params.id, 10);
+  if (!Number.isInteger(personId)) return res.status(400).json({ message: 'Invalid founder id.' });
+
+  try {
+    const { rows: personRows } = await pool.query(
+      'select id, full_name, linkedin_url, bio from people where id = $1',
+      [personId]
+    );
+
+    const person = personRows[0];
+    if (!person) {
+      return res.status(404).json({ message: 'Founder not found.' });
+    }
+
+    const { rows: companies } = await pool.query(
+      `select c.id as company_id, c.name as company_name, c.slug as company_slug,
+              s.name as sector, c.founded_year, c.status, f.role, f.is_current
+       from founders f
+       join companies c on c.id = f.company_id
+       left join sectors s on s.id = c.sector_id
+       where f.person_id = $1
+       order by c.founded_year nulls last, c.id`,
+      [personId]
+    );
+
+    res.json({ person, companies });
   } catch (error) {
     res.status(500).json({ message: databaseErrorMessage(error) });
   }

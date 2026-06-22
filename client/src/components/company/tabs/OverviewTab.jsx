@@ -1,6 +1,9 @@
+import { useNavigate } from 'react-router-dom';
 import { Card, TabLink, PersonRow, SignalRow } from '../Primitives';
+import { deriveFounderBadges } from '../../../lib/companyInsights';
 
 export default function OverviewTab({ company, founders, signals, fundingRounds, onNavigateTab }) {
+  const navigate = useNavigate();
   const chronological = [...fundingRounds].reverse();
   const maxAmount = Math.max(1, ...chronological.map((round) => Number(round.amount_usd) || 0));
 
@@ -45,7 +48,14 @@ export default function OverviewTab({ company, founders, signals, fundingRounds,
             {founders.length === 0 ? (
               <p className="text-sm text-sketch-muted">No founder data yet.</p>
             ) : (
-              founders.slice(0, 3).map((person) => <PersonRow key={person.id} person={person} />)
+              founders.slice(0, 3).map((person) => (
+                <PersonRow
+                  key={person.id}
+                  person={person}
+                  badges={deriveFounderBadges(person, company.id)}
+                  onView={person.person_id ? () => navigate(`/people/${person.person_id}`) : undefined}
+                />
+              ))
             )}
           </div>
         </Card>

@@ -1,6 +1,9 @@
+import { useNavigate } from 'react-router-dom';
 import { Card, PersonRow } from '../Primitives';
+import { deriveFounderBadges } from '../../../lib/companyInsights';
 
-export default function PeopleTab({ founders, employeeRange }) {
+export default function PeopleTab({ founders, employeeRange, companyId }) {
+  const navigate = useNavigate();
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-3">
@@ -21,7 +24,11 @@ export default function PeopleTab({ founders, employeeRange }) {
         <div className="grid gap-3.5 sm:grid-cols-2">
           {founders.map((person) => (
             <Card key={person.id}>
-              <PersonRow person={person} />
+              <PersonRow
+                person={person}
+                badges={deriveFounderBadges(person, companyId)}
+                onView={person.person_id ? () => navigate(`/people/${person.person_id}`) : undefined}
+              />
             </Card>
           ))}
         </div>

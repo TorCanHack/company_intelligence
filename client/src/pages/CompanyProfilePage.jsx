@@ -133,7 +133,9 @@ export default function CompanyProfilePage() {
       {tab === 'funding' && (
         <FundingTab fundingRounds={fundingRounds} totalRaisedUsd={totalRaisedUsd} valuationUsd={valuationUsd} />
       )}
-      {tab === 'people' && <PeopleTab founders={founders} employeeRange={company.employee_range} />}
+      {tab === 'people' && (
+        <PeopleTab founders={founders} employeeRange={company.employee_range} companyId={company.id} />
+      )}
       {tab === 'signals' && <SignalsTab signals={signals} />}
       {tab === 'news' && <NewsTab sources={sources} />}
     </DashboardShell>
