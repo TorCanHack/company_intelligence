@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { getPerson } from '../lib/api';
 import DashboardShell from '../components/layout/DashboardShell';
 import { Card } from '../components/company/Primitives';
+import CompanyLogo from '../components/company/CompanyLogo';
 import Skeleton from '../components/ui/Skeleton';
 import EmptyState from '../components/ui/EmptyState';
 
@@ -106,7 +107,7 @@ export default function FounderProfilePage() {
                   key={company.company_id}
                   className="flex items-center gap-3 border-b border-dashed border-sketch-divider pb-3.5 last:border-0 last:pb-0"
                 >
-                  <span className="size-9 flex-none rounded-md bg-sketch-chip" />
+                  <CompanyLogo name={company.company_name} logoUrl={company.company_logo_url} className="size-9 rounded-md" />
                   <div className="min-w-0 flex-1">
                     <Link
                       to={`/companies/${company.company_slug}`}

@@ -41,6 +41,7 @@ export default function CompanyProfilePage() {
             sector: result.company.sector,
             employeeRange: result.company.employee_range,
             stage: result.fundingRounds[0]?.round_type ?? null,
+            logoUrl: result.company.logo_url,
           });
         }
       } catch (err) {

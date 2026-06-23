@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import DashboardShell from '../components/layout/DashboardShell';
+import CompanyLogo from '../components/company/CompanyLogo';
 import { getSignals } from '../lib/api';
 import { formatUsd, formatDate } from '../lib/format';
 
@@ -67,7 +68,7 @@ export default function Signals() {
                   key={signal.id}
                   className="flex items-center gap-3.5 rounded-[10px] border-[1.5px] border-sketch-border p-4.5"
                 >
-                  <span className="size-13 flex-none rounded-xl bg-sketch-chip" />
+                  <CompanyLogo name={signal.company_name} logoUrl={signal.company_logo_url} />
                   <div className="min-w-0 flex-1">
                     <div className="font-handwritten truncate text-xl text-sketch-heading">
                       {signal.company_name} raised {formatUsd(signal.amount_usd)}

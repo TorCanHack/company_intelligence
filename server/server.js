@@ -154,7 +154,7 @@ app.get('/api/companies', requireAuth, dataLimiter, async (req, res) => {
          where f.person_id is not null and c.country = any($9::text[])
        )
        select
-         c.id, c.name, c.slug, c.city, c.founded_year, c.description,
+         c.id, c.name, c.slug, c.city, c.founded_year, c.description, c.logo_url,
          s.name as sector, s.slug as sector_slug,
          lr.round_type as last_round_type, lr.announced_date as last_round_date, lr.amount_usd as last_round_amount_usd,
          (wi.id is not null) as is_tracked,
@@ -206,6 +206,7 @@ app.get('/api/companies', requireAuth, dataLimiter, async (req, res) => {
       city: row.city,
       founded_year: row.founded_year,
       description: row.description,
+      logo_url: row.logo_url,
       sector: row.sector,
       sector_slug: row.sector_slug,
       is_tracked: row.is_tracked,
@@ -234,7 +235,7 @@ app.get('/api/signals', requireAuth, dataLimiter, async (req, res) => {
     const limit = Math.min(50, Math.max(1, Number.parseInt(req.query.limit, 10) || 20));
 
     const { rows } = await pool.query(
-      `select fr.id, c.name as company_name, c.slug as company_slug,
+      `select fr.id, c.name as company_name, c.slug as company_slug, c.logo_url as company_logo_url,
               fr.round_type, fr.amount_usd, fr.announced_date
        from funding_rounds fr
        join companies c on c.id = fr.company_id
@@ -354,7 +355,7 @@ app.get('/api/people/:id', requireAuth, dataLimiter, async (req, res) => {
     }
 
     const { rows: companies } = await pool.query(
-      `select c.id as company_id, c.name as company_name, c.slug as company_slug,
+      `select c.id as company_id, c.name as company_name, c.slug as company_slug, c.logo_url as company_logo_url,
               s.name as sector, c.founded_year, c.status, f.role, f.is_current
        from founders f
        join companies c on c.id = f.company_id
@@ -374,7 +375,7 @@ app.get('/api/watchlist', requireAuth, async (req, res) => {
   try {
     const { rows } = await pool.query(
       `select
-         c.id, c.name, c.slug, c.city, c.founded_year, c.description,
+         c.id, c.name, c.slug, c.city, c.founded_year, c.description, c.logo_url,
          s.name as sector, s.slug as sector_slug,
          lr.round_type as last_round_type, lr.announced_date as last_round_date, lr.amount_usd as last_round_amount_usd
        from watchlist_items wi
@@ -399,6 +400,7 @@ app.get('/api/watchlist', requireAuth, async (req, res) => {
       city: row.city,
       founded_year: row.founded_year,
       description: row.description,
+      logo_url: row.logo_url,
       sector: row.sector,
       sector_slug: row.sector_slug,
       is_tracked: true,

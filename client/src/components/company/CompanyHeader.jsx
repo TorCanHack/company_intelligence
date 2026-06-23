@@ -1,4 +1,5 @@
 import { Stat } from './Primitives';
+import CompanyLogo from './CompanyLogo';
 import { formatUsd } from '../../lib/format';
 import { useWatchlist } from '../../lib/useWatchlist';
 
@@ -19,7 +20,7 @@ export default function CompanyHeader({ company, lastRound, totalRaisedUsd, valu
     <div className="border-b border-dashed border-sketch-divider p-3.5 sm:p-5.5">
       <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center">
         <div className="flex min-w-0 items-center gap-3.5">
-          <span className="size-13 flex-none rounded-xl bg-sketch-chip" />
+          <CompanyLogo name={company.name} logoUrl={company.logo_url} />
 
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2.5">

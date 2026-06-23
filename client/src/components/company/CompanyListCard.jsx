@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Stat } from './Primitives';
+import CompanyLogo from './CompanyLogo';
 import { formatUsd, formatDate } from '../../lib/format';
 import { useWatchlist } from '../../lib/useWatchlist';
 
@@ -10,7 +11,7 @@ export default function CompanyListCard({ company }) {
   return (
     <div className="rounded-[10px] border-[1.5px] border-sketch-border">
       <Link to={`/companies/${company.slug}`} className="flex items-center gap-3.5 p-4.5">
-        <span className="size-13 flex-none rounded-xl bg-sketch-chip" />
+        <CompanyLogo name={company.name} logoUrl={company.logo_url} />
         <div className="min-w-0 flex-1">
           <span className="font-handwritten block truncate text-xl text-sketch-heading">
             {company.name}

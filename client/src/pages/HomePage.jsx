@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Moon, Radar, Sun } from 'lucide-react';
 import DashboardShell from '../components/layout/DashboardShell';
+import CompanyLogo from '../components/company/CompanyLogo';
 import { useAuth } from '../lib/useAuth';
 import { useWatchlist } from '../lib/useWatchlist';
 import { getSignals } from '../lib/api';
@@ -104,7 +105,7 @@ export default function HomePage() {
             <div className="flex flex-col gap-3.5">
               {trackedCompanies.slice(0, 4).map((company) => (
                 <Link key={company.id} to={`/companies/${company.slug}`} className="flex items-center gap-2.5">
-                  <span className="size-9 flex-none rounded-lg bg-sketch-chip" />
+                  <CompanyLogo name={company.name} logoUrl={company.logo_url} className="size-9 rounded-lg" />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-[13px] text-sketch-text">{company.name}</div>
                     <div className="truncate text-[11px] text-sketch-label">{company.sector ?? 'Uncategorized'}</div>
@@ -186,7 +187,7 @@ export default function HomePage() {
                   >
                     <td className="py-3 text-[13px] text-sketch-text">
                       <Link to={`/companies/${row.slug}`} className="flex items-center gap-2.5">
-                        <span className="size-6 flex-none rounded bg-sketch-chip" />
+                        <CompanyLogo name={row.name} logoUrl={row.logoUrl} className="size-6 rounded" />
                         {row.name}
                       </Link>
                     </td>
